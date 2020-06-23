@@ -10,6 +10,12 @@ This program automatically builds the reports, with added flexibility for adding
 
 Lastly, before graduating and leaving this small company, a company I worked at for two years, I wrote a detailed user guide so my boss could use the program indefinitely into the future. The entire program and user guide, details omitted, is here, except a sample report itself, which I did not make before leaving.
 
+The guide looks long (13 pages) because it uses big pictures and covers three parts. Under normal circumstances the user need only read part 1.
+
+1. How to Run the Program
+2. How to Add/ Remove Reports
+3. How to Add/ Remove Additional Tables to Reports
+
 
 If I were still working on this project, I would add a couple things to this program:
 
