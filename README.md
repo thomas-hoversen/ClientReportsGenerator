@@ -19,7 +19,7 @@ The guide looks long (13 pages) because it uses big pictures and covers three pa
 
 If I were still working on this project, I would add a couple things to this program:
 
-- Catch exceptions and other potential errors.
+- Catch exceptions and other potential errors (though the way its used, this wasn't a problem and I haven't been contacted by my former employer about any problems).
 - Make a user interface.
 
 
