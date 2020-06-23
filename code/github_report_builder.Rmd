@@ -1,0 +1,333 @@
+---
+title: "Client Report Generator"
+author: "Thomas Hoversen"
+date: "2/18/2020"
+output: html_document
+---
+
+Load Packages
+```{r}
+library(dplyr)
+library(flextable)
+library(officer)
+library(openxlsx)
+library(pivottabler)
+library(readxl)
+```
+
+Tab Insert Function
+```{r}
+tabInsert <- function(longorshort, x, index, top, left) {
+  if (class(x) == "list") {
+     for (i in seq_along(x)) {
+        a <- x[[i]]
+        longorshort <- on_slide(longorshort, index = index) %>% 
+        ph_with(a, location = ph_location(top = top, left = left) ) 
+     }
+  } else {
+    longorshort <- on_slide(longorshort, index = index) %>% 
+    ph_with(x, location = ph_location(top = top, left = left) )
+  }
+}
+```
+
+New Tables Function
+```{r}
+new_tables <- function(data, type, source = FALSE) {
+  table <- PivotTable$new()
+  table$addData(data)
+  if (source) {
+    table$addRowDataGroups("Source")  
+  }
+  table$addRowDataGroups(type)
+  if (source) {
+  table$defineCalculation(calculationName="...3", summariseExpression="n()")
+  table$sortRowDataGroups(levelNumber = 1, orderBy = "calculation", sortOrder = "desc")
+  table$sortRowDataGroups(levelNumber = 2, orderBy = "calculation", sortOrder = "desc")
+  }
+  else {
+  table$defineCalculation(calculationName="...3", summariseExpression="n()")
+  table$sortRowDataGroups(levelNumber = 1, orderBy = "calculation", sortOrder = "desc")
+  }
+  table$renderPivot(styleNamePrefix="t0")
+  table$asDataFrame()
+      
+     wb2 <- createWorkbook(creator = Sys.getenv("USERNAME"))
+ addWorksheet(wb2, "Data")
+ table$writeToExcelWorksheet(wb=wb2, wsName="Data",
+                          topRowNumber=1, leftMostColumnNumber=1,
+                          applyStyles=TRUE, mapStylesFromCSS=TRUE)
+saveWorkbook(wb2, file="C:\\Users\\thoversen\\Documents\\Client Reports Generator\\code\\datatable_storage\\table_output.xlsx", overwrite = TRUE)
+ 
+ table_style <- read_excel("C:\\Users\\thoversen\\Documents\\Client Reports Generator\\code\\datatable_storage\\table_output.xlsx")
+ 
+L = list()
+Lval = FALSE
+len <- nrow(table_style)
+
+if (nrow(table_style) > 34) {
+  Lval = TRUE
+      for (i in 1:10) {
+        if (nrow(table_style) < 30) {
+          L[[i]] <- table_style[1:nrow(table_style),] 
+          break()
+        } else {
+          L[[i]] <- table_style[1:30,]
+          table_style = table_style[31:nrow(table_style),]
+        }  
+    }
+}
+
+if (Lval) {
+for (i in seq_along(L)) {
+  table_style <- L[[i]]
+  
+  table_style[is.na(table_style)] <- " "
+  
+if (i == 1) {
+ if (source) {
+   
+ tabled <- flextable(table_style, col_keys = c("...1", "...2", "...3"))
+ tabled <- set_header_labels(tabled, ...1 = type, ...2 = " ", ...3 = "")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- bold(tabled, part = "header")
+ tabled <-  bg(tabled, bg = "#cce6ff", part = "header")
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...3", digits = 0)
+ tabled <- border_remove(tabled)
+ L[[i]] <- tabled
+ } else {
+    tabled <- flextable(table_style, col_keys = c("...1", "...2"))
+ tabled <- set_header_labels(tabled, ...1 = type, ...2 = " ")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- bold(tabled, part = "header")
+ tabled <-  bg(tabled, bg = "#cce6ff", part = "header")
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...2", digits = 0)
+ tabled <- border_remove(tabled)
+ L[[i]] <- tabled
+    }
+} else if (i == length(L)) {
+  if (source) {
+     tabled <- flextable(table_style, col_keys = c("...1", "...2", "...3"))
+ tabled <- set_header_labels(tabled, ...1 = " ", ...2 = " ", ...3 = "")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- bold(tabled, i = nrow(table_style))
+ tabled <-  bg(tabled, i =nrow(table_style), bg = "#cce6ff",)
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...3", digits = 0)
+ tabled <- border_remove(tabled)
+ L[[i]] <- tabled
+ } else {
+    tabled <- flextable(table_style, col_keys = c("...1", "...2"))
+ tabled <- set_header_labels(tabled, ...1 = "", ...2 = " ")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- bold(tabled, i = nrow(table_style))
+ tabled <-  bg(tabled, i =nrow(table_style), bg = "#cce6ff",)
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...2", digits = 0)
+ tabled <- border_remove(tabled)
+ L[[i]] <- tabled
+ }} else {
+   if (source) {
+    tabled <- flextable(table_style, col_keys = c("...1", "...2", "...3"))
+ tabled <- set_header_labels(tabled, ...1 = "", ...2 = " ", ...3 = "")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...3", digits = 0)
+ tabled <- border_remove(tabled)
+ L[[i]] <- tabled
+ } else {
+    tabled <- flextable(table_style, col_keys = c("...1", "...2"))
+ tabled <- set_header_labels(tabled, ...1 = "", ...2 = " ")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...2", digits = 0)
+ tabled <- border_remove(tabled)
+ L[[i]] <- tabled
+  }}
+}
+  return(L)
+  } 
+else {
+  table_style[is.na(table_style)] <- " "
+ if (source) {
+ tabled <- flextable(table_style, col_keys = c("...1", "...2", "...3"))
+ tabled <- set_header_labels(tabled, ...1 = type, ...2 = " ", ...3 = "")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- bold(tabled, part = "header")
+ tabled <- bold(tabled, i = nrow(table_style))
+ tabled <-  bg(tabled, bg = "#cce6ff", part = "header")
+ tabled <-  bg(tabled, i =nrow(table_style), bg = "#cce6ff",)
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...3", digits = 0)
+ tabled <- border_remove(tabled)
+ }
+ else {
+    tabled <- flextable(table_style, col_keys = c("...1", "...2"))
+ tabled <- set_header_labels(tabled, ...1 = type, ...2 = " ")
+ tabled <- fontsize(tabled, size = 10)
+ tabled <- bold(tabled, part = "header")
+ tabled <- bold(tabled, i = nrow(table_style))
+ tabled <-  bg(tabled, bg = "#cce6ff", part = "header")
+ tabled <-  bg(tabled, i =nrow(table_style), bg = "#cce6ff",)
+ tabled <- autofit(tabled, add_w = 0, add_h = 0)
+ tabled <- colformat_num(x = tabled, col_keys = "...2", digits = 0)
+ tabled <- border_remove(tabled)
+ }
+
+}
+}
+```
+
+Make Templates Function
+```{r}
+make_templates <- function(powerpoint_name, campaign_name, long = FALSE, extra_table = FALSE, extra_table_name = NA, extra_table_source = FALSE) {
+  
+Powerpoint_name <- as.character(powerpoint_name)
+
+target0 <- paste("C:\\Users\\thoversen\\Documents\\Client Reports Generator\\reports\\", Powerpoint_name, ".pptx", sep = "")
+
+L <- list()
+  
+powerpoint_name <- as_tibble(read_excel(updated_file_path, campaign_name))
+
+if (extra_table) {
+  for (i in seq_along(extra_table_name)) {
+  L[[i]] <- new_tables(data = powerpoint_name, type = extra_table_name[[i]], source = extra_table_source[[i]])
+  }
+
+}
+
+
+# Required Tables
+industry <- new_tables(powerpoint_name, "Industry")
+jobtitle <- new_tables(powerpoint_name, "Job Title")
+employeesize <- new_tables(powerpoint_name, "Number of Employees")
+industry_source <- new_tables(powerpoint_name, "Industry", source = TRUE)
+jobtitle_source <- new_tables(powerpoint_name, "Job Title", source = TRUE)
+employeesize_source <- new_tables(powerpoint_name, "Number of Employees", source = TRUE)
+
+
+
+#Insert Templates Functions
+long_temp <- function(long_powerpoint) {
+  tabInsert(long_powerpoint, industry, 3, 5, 2)
+  tabInsert(long_powerpoint, jobtitle, 3, 5, 8)
+  tabInsert(long_powerpoint, employeesize, 4, 1.5, 3)
+  tabInsert(long_powerpoint, industry_source, 6, 2, 10)
+  tabInsert(long_powerpoint, jobtitle_source, 6, 4, 3.2)
+  tabInsert(long_powerpoint, employeesize_source, 6, 1, 5)
+}
+
+
+short_temp <- function(short_powerpoint) {
+  tabInsert(short_powerpoint, industry, 3, 5, 2)
+  tabInsert(short_powerpoint, jobtitle, 3, 5, 8)
+  tabInsert(short_powerpoint, employeesize, 4, 1.5, 3)
+  tabInsert(short_powerpoint, industry_source, 6, 2, 10)
+  tabInsert(short_powerpoint, jobtitle_source, 6, 4, 3.2)
+  tabInsert(short_powerpoint, employeesize_source, 6, 1, 5)
+}
+
+
+
+
+
+if (long) {
+  long_powerpoint <- read_pptx(path = "C:\\Users\\thoversen\\Documents\\Client Reports Generator\\code\\powerpoint_templates\\long_template.pptx")
+  
+if (extra_table) {
+  
+long_powerpoint <- on_slide(long_powerpoint, index = 1) %>% 
+  ph_with(value = format(Sys.Date()), location = ph_location_type(type = "subTitle")) %>%
+  ph_with(value = Powerpoint_name, location = ph_location_type(type = "subTitle"))
+  long_temp(long_powerpoint)
+
+  
+for (i in seq_along(L)) {
+  a <- L[[i]] 
+  tabInsert(long_powerpoint, a, 10, 2, 8)
+}  
+  
+  print(long_powerpoint, target = target0)
+
+} else {
+long_powerpoint <- on_slide(long_powerpoint, index = 1) %>% 
+  ph_with(value = format(Sys.Date()), location = ph_location_type(type = "subTitle")) %>%
+  ph_with(value = Powerpoint_name, location = ph_location_type(type = "subTitle"))
+  long_temp(long_powerpoint)
+  
+  print(long_powerpoint, target = target0)
+
+}
+  
+} else {
+  
+short_powerpoint <- read_pptx(path = "C:\\Users\\thoversen\\Documents\\Client Reports Generator\\code\\powerpoint_templates\\short_template.pptx")
+
+if (extra_table) {
+
+short_powerpoint <- on_slide(short_powerpoint, index = 1) %>% 
+  ph_with(value = format(Sys.Date()), location = ph_location_type(type = "subTitle")) %>%
+  ph_with(value = Powerpoint_name, location = ph_location_type(type = "subTitle"))
+  short_temp(short_powerpoint)
+    
+for (i in seq_along(L)) {
+  a <- L[[i]] 
+  tabInsert(short_powerpoint, a, 7, 2, 8)
+}  
+  
+  print(short_powerpoint, target = target0)
+
+} else {
+short_powerpoint <- on_slide(short_powerpoint, index = 1) %>% 
+  ph_with(value = format(Sys.Date()), location = ph_location_type(type = "subTitle")) %>%
+  ph_with(value = Powerpoint_name, location = ph_location_type(type = "subTitle"))
+  short_temp(short_powerpoint)
+  
+  print(short_powerpoint, target = target0)
+
+}
+  }
+}
+
+
+```
+
+# update data file path
+```{r}
+updated_file_path <- "C:\\Users\\thoversen\\Documents\\Client Reports Generator\\data\\company03102020.xlsx"
+```
+
+# generate reports
+```{r}
+#make_templates <- function(powerpoint_name, campaign_name, long = FALSE, extra_table = FALSE, extra_table_name = NA, extra_table_source = FALSE)
+
+make_templates("campaign1", "Campaign1", long = FALSE, extra_table = TRUE, extra_table_name = c("Annual Revenue", "Annual Revenue"), extra_table_source = c(TRUE, FALSE))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
